@@ -1,0 +1,14 @@
+name: notify-push
+on:
+  push:
+    branches: ['**']
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send push event
+        env:
+          KEY: ${{ secrets.ROUTINE_WEBHOOK_KEY }}
+        run: |
+          jq '{event:"push", repository:.repository.full_name, ref:.ref, pusher:.pusher.name, compare:.compare, commits:[.commits[]? | {id, message, url, timestamp, author:.author.name}]}' "$GITHUB_EVENT_PATH" > payload.json
+          curl -sS -f -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $KEY" --data @payload.json https://api2.cursor.sh/automations/webhook/c49f8e81-6dc5-528c-b31d-28c422ad0d81
